@@ -90,32 +90,6 @@ The camera is modelled and published but is not consumed by the SLAM or navigati
 
 Asynchronous pose-graph SLAM with a Ceres back end.
 
-| Parameter | Value | Effect |
-|---|---|---|
-| `solver_plugin` | `CeresSolver` | Graph optimisation back end |
-| `ceres_linear_solver` | `SPARSE_NORMAL_CHOLESKY` | Sparse normal-equation solve |
-| `ceres_trust_strategy` | `LEVENBERG_MARQUARDT` | Damped-Newton trust region |
-| `resolution` | 0.05 m | Occupancy grid cell size |
-| `max_laser_range` | 20.0 m | Matches the LiDAR model |
-| `minimum_travel_distance` | 0.5 m | Keyframe gate — translation |
-| `minimum_travel_heading` | 0.5 rad | Keyframe gate — rotation |
-| `do_loop_closing` | `true` | Loop closure enabled |
-| `loop_match_minimum_response_fine` | 0.45 | Acceptance threshold for a fine match |
-
-<details>
-<summary>Further mapping parameters</summary>
-
-| Parameter | Value | Effect |
-|---|---|---|
-| `scan_buffer_size` | 50 | Scans held for matching |
-| `map_update_interval` | 5.0 s | Rasterisation period |
-| `loop_search_maximum_distance` | 3.0 m | Loop-closure candidate search radius |
-| `loop_match_minimum_chain_size` | 10 | Minimum chain before a closure is attempted |
-| `loop_search_space_dimension` | 8.0 m | Correlative search window for closures |
-| `correlation_search_space_resolution` | 0.01 m | Scan-match grid resolution |
-
-</details>
-
 Keyframe gating at 0.5 m / 0.5 rad is the parameter doing the most work here: it caps graph growth so that node count scales with distance travelled rather than with wall-clock time, which is what keeps memory growth linear during the mapping run measured below.
 
 ### Localization — `config/ekf.yaml` and `config/nav2_config.yaml`
@@ -127,21 +101,21 @@ The EKF runs in `two_d_mode` at 30 Hz with `world_frame: odom`, and fuses only t
 | Wheel odometry | `/odom` | `vx`, yaw rate |
 | IMU | `/imu/data` | roll, pitch, yaw, and all three angular rates |
 
-Wheel *position* is deliberately not fused — only velocity — so wheel slip degrades the estimate gradually instead of injecting an unbounded position error. `imu0_relative: true` zeroes the IMU heading at start-up, and `imu0_remove_gravitational_acceleration: true` strips the gravity vector. Both sources use a Mahalanobis rejection threshold of 5.0. Output is remapped to `/odom/filtered`.
+Wheel *position* is deliberately not fused — only velocity — so wheel slip degrades the estimate gradually instead of injecting an unbounded position error. Output is remapped to `/odom/filtered`.
 
-Global localization uses AMCL with a `likelihood_field` sensor model, 60 beams, 500–2000 particles, and update gates of 0.1 m / 0.1 rad. Motion-noise coefficients are raised above the Nav2 defaults (`alpha1` 0.5, `alpha2` 0.3, `alpha3` 0.3, `alpha4` 0.5, `alpha5` 0.3), which widens the particle spread to tolerate the simulated wheel-slip model.
+Global localization uses AMCL with a `likelihood_field` sensor model.
 
 ### Navigation — `config/nav2_config.yaml`
 
-| Layer | Choice | Key settings |
-|---|---|---|
-| Global planner | `navfn_planner` | `use_astar: false` (Dijkstra), `tolerance: 0.0` |
-| Local controller | `dwb_controller` | `max_vel_x` 0.26 m/s, `max_vel_theta` 1.0 rad/s, `acc_lim_x` 2.5 m/s², `sim_time` 1.7 s, 20 × 20 velocity samples |
-| Goal tolerance | — | `xy_goal_tolerance` 0.25 m |
-| Local costmap | rolling | 3 × 3 m @ 0.05 m, obstacle + inflation layers |
-| Global costmap | static | static + obstacle + inflation, `inflation_radius` 0.55 m, `cost_scaling_factor` 3.0 |
+| Layer | Choice |
+|---|---|
+| Global planner | `navfn_planner` (Dijkstra) | 
+| Local controller | `dwb_controller` | 
+| Goal tolerance | — | 
+| Local costmap | rolling |
+| Global costmap | static | 
 
-DWB critic weights are `PathDist` 32.0, `RotateToGoal` 32.0, `GoalDist` 24.0, `BaseObstacle` 0.02, with `PathAlign` and `GoalAlign` disabled at 0.0. The resulting behaviour tracks the global path tightly and prioritises final heading alignment, rather than cutting corners toward the goal — appropriate for a 29.7 × 4.9 m corridor-shaped environment where the free space is narrow.
+The resulting behaviour tracks the global path tightly and prioritises final heading alignment, rather than cutting corners toward the goal.
 
 ![Autonomous navigation with Nav2 in RViz2](assets/gifs/nav.gif)
 
@@ -158,7 +132,9 @@ ROS 2 Dashing predates the lifecycle-event handlers later distributions use to s
 
 ## Results
 
-Two runs are committed in [`benchmark_results/`](benchmark_results). Both were captured with the scripts in `scripts/` on an Ubuntu 18.04 laptop. **Both exclude `gzserver`, `gzclient` and `rviz2`** — the figures characterise the ROS 2 stack, not the total simulation load.
+Two runs are committed in [`benchmark_results/`](benchmark_results). 
+
+> **Both exclude `gzserver`, `gzclient` and `rviz2`** — the figures characterise the ROS 2 stack, not the total simulation load.
 
 Values below are read from the committed charts, so treat them as approximate to roughly ±0.5 % CPU and ±2 MB RAM.
 
@@ -170,8 +146,6 @@ Stages: start 0 s → mapping begins ≈18 s → loop closure marked ≈197 s.
 |---|---|---|---|---|
 | `async_slam_toolbox_node` | ≈4–5 % | ≈5–9 % | ≈18.7 % @ 193 s | 61.3 → 66.0 MB |
 | `robot_state_publisher` | ≈1 % | ≈1–2 % | ≈2 % | 24.7 MB (flat) |
-
-Memory grows monotonically by ≈5 MB over 220 s of continuous mapping, consistent with pose-graph accumulation rather than a leak. The single ≈18.7 % CPU spike immediately precedes the loop-closure marker, which is the expected signature of a graph-wide optimisation pass.
 
 ### Navigation run — 209 s, 9 processes monitored
 
@@ -190,25 +164,6 @@ Stages: start 0 s → motion begins ≈38 s. Nav2 becomes visible to the monitor
 Two transients appear during bringup — ≈34.5 % at 24 s and ≈28 % at 30 s — as the lifecycle manager activates the stack. Steady-state cost is dominated by `dwb_controller`, which is ≈70 % of total CPU: trajectory sampling at 20 × 20 candidates over a 1.7 s horizon is the single most expensive operation in the navigation loop. RAM is flat after 35 s, so the navigation stack has no growth term.
 
 CPU percentages are host-dependent and the benchmark host's CPU model was not recorded. Fill in `<LAPTOP_CPU_MODEL>` and `<LAPTOP_RAM_GB>` before quoting these figures comparatively.
-
----
-
-## Energy model
-
-`scripts/monitor_power_ros2.py` estimates power from `/odom/filtered` and integrates it over time. It is an **analytical model**, not a measurement — no current sensor exists in this project.
-
-```text
-P(t) = P_static + k_v·|v| + k_ω·|ω| + k_a·|a|
-```
-
-| Term | Value | Basis |
-|---|---|---|
-| **`P_static`** | **10.35 W** | Jetson Nano 5.0 + RPLiDAR S2E 2.2 + camera 2.5 + STM32 MCU 0.6 + BNO055 0.05 |
-| `k_v` | 16.0 W/(m/s) | Rolling friction + motor load |
-| `k_ω` | 9.0 W/(rad/s) | Turning friction |
-| `k_a` | 14.0 W/(m/s²) | Inertial cost of accelerating |
-
-The script reports total energy in joules, average and peak power, and energy per metre travelled. The three dynamic coefficients are **estimates that have never been calibrated against a real motor** — the source file says so in its own comments. Any absolute energy figure from this model should be read as an order-of-magnitude indication only; the ratios between manoeuvres are more trustworthy than the totals.
 
 ---
 
