@@ -54,13 +54,6 @@ flowchart LR
 
 The transform chain is `map → odom → base_footprint → base_link → {chassis, wheels}`. 
 
-Ownership is split deliberately:
-- The Gazebo `diff_drive` plugin publishes `/odom` but has `publish_odom_tf` set to **false**.
-- The EKF is the sole publisher of `odom → base_footprint`.
-- AMCL is the sole publisher of `map → odom`.
-
-=> \Rightarrow This avoids the duplicate-transform conflict that breaks a naïve `robot_localization` + Nav2 setup.
-
 | Component | Package | Owns |
 |---|---|---|
 | `slam_toolbox` | `slam_toolbox` | Map construction, pose graph, loop closure |
@@ -142,8 +135,7 @@ ROS 2 Dashing predates the lifecycle-event handlers later distributions use to s
 Two runs are committed in [`benchmark_results/`](benchmark_results). 
 
 > **Both exclude `gzserver`, `gzclient` and `rviz2`** — the figures characterise the ROS 2 stack, not the total simulation load.
-
-Values below are read from the committed charts, so treat them as approximate to roughly ±0.5 % CPU and ±2 MB RAM.
+> Values below are read from the committed charts, so treat them as approximate to roughly ±0.5 % CPU and ±2 MB RAM.
 
 ### SLAM run — 220 s, 2 processes monitored
 
