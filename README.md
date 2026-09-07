@@ -94,14 +94,14 @@ Keyframe gating at 0.5 m / 0.5 rad is the parameter doing the most work here: it
 
 ### Localization — `config/ekf.yaml` and `config/nav2_config.yaml`
 
-The EKF runs in `two_d_mode` at 30 Hz with `world_frame: odom`, and fuses only the states each sensor actually observes well:
+The EKF fuses only the states each sensor actually observes well:
 
 | Source | Topic | States fused |
 |---|---|---|
 | Wheel odometry | `/odom` | `vx`, yaw rate |
 | IMU | `/imu/data` | roll, pitch, yaw, and all three angular rates |
 
-Wheel *position* is deliberately not fused — only velocity — so wheel slip degrades the estimate gradually instead of injecting an unbounded position error. Output is remapped to `/odom/filtered`.
+Output is remapped to `/odom/filtered`.
 
 Global localization uses AMCL with a `likelihood_field` sensor model.
 
@@ -257,38 +257,10 @@ Each script writes a timestamped CSV and PNG to the working directory on `Ctrl-C
 │   ├── monitor_sim_slam.py        # Staged CPU/RAM benchmark, SLAM
 │   ├── monitor_sim_nav.py         # Staged CPU/RAM benchmark, navigation
 │   └── monitor_power_ros2.py      # Analytical energy model
-├── benchmark_results/             # Committed benchmark charts
 ├── assets/                        # Demo GIFs and screenshots
 ├── CMakeLists.txt
 └── package.xml
 ```
-
----
-
-## Configuration
-
-Every tunable named in the Method section lives in the file cited there. Four settings are not covered above:
-
-| What to change | Where | Default |
-|---|---|---|
-| World file | both launch files → `world_file` | `worlds/room2.world` |
-| Map loaded at startup | `sim_navigation.launch.py` → `map:=` argument | `maps/my_map.yaml` |
-| Bringup delays | both launch files → `TimerAction(period=…)` | see Launch orchestration |
-| Power model coefficients | `scripts/monitor_power_ros2.py` → `HARDWARE` | `k_v` 16.0, `k_ω` 9.0, `k_a` 14.0 |
-
-`config/nav2_config.yaml` is the authoritative Nav2 parameter set. The `params/` directory contains an earlier TurtleBot3-derived baseline that no launch file loads and whose values disagree with `config/`; it is retained for reference only and should not be edited.
-
----
-
-## Limitations
-
-- **Simulation only.** No physical robot exists. Every result comes from Gazebo; sim-to-real transfer is unverified.
-- **No ground-truth accuracy metric.** Map quality and localization are assessed visually. No ATE or RPE is computed against Gazebo's true pose, so there is no quantitative accuracy claim in this repository.
-- **The energy figures are modelled, not measured.** `k_v`, `k_ω` and `k_a` were never calibrated against a real motor.
-- **Benchmarks exclude the simulator.** `gzserver` and `rviz2` are outside the monitored process set, and the benchmark host's CPU model was not recorded, so CPU percentages are not comparable across machines.
-- **Hardcoded absolute paths.** `config/nav2_config.yaml` and `maps/my_map.yaml` embed `/home/thienan/ros2_ws/...`. Map loading will fail on any other machine until these are made relative.
-- **One static environment.** All runs use `room2.world`. Dynamic-obstacle avoidance is not evaluated, despite `models/dynamic_obstacle/` being present.
-- **ROS 2 Dashing reached end of life on 31 May 2021.** It receives no patches, and the codebase uses Dashing-era launch syntax (`node_executable`) that later distributions renamed.
 
 ---
 
