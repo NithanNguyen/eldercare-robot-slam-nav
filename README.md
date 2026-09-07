@@ -11,7 +11,6 @@
 [![SLAM](https://img.shields.io/badge/SLAM-slam__toolbox-6E44AF)](https://github.com/SteveMacenski/slam_toolbox)
 [![License](https://img.shields.io/badge/License-Apache%202.0-D22128)](LICENSE)
 
-![SLAM mapping run in Gazebo and RViz2](assets/gifs/slam.gif)
 
 </div>
 
@@ -84,12 +83,6 @@ The camera is modelled and published but is not consumed by the SLAM or navigati
 
 ## Method
 
-### Mapping — `config/mapper_params_online_async.yaml`
-
-Asynchronous pose-graph SLAM with a Ceres back end.
-
-Keyframe gating at 0.5 m / 0.5 rad is the parameter doing the most work here: it caps graph growth so that node count scales with distance travelled rather than with wall-clock time, which is what keeps memory growth linear during the mapping run measured below.
-
 ### Localization — `config/ekf.yaml` and `config/nav2_config.yaml`
 
 - The EKF fuses only the states each sensor actually observes well:
@@ -102,6 +95,12 @@ Keyframe gating at 0.5 m / 0.5 rad is the parameter doing the most work here: it
 Output is remapped to `/odom/filtered`.
 
 - Global localization uses AMCL with a `likelihood_field` sensor model.
+
+### Mapping — `config/mapper_params_online_async.yaml`
+
+![SLAM mapping run in Gazebo and RViz2](assets/gifs/slam.gif)
+
+Asynchronous pose-graph SLAM with a Ceres back end.
 
 ### Navigation — `config/nav2_config.yaml`
 
