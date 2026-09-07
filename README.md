@@ -52,7 +52,14 @@ flowchart LR
     CTRL -->|/cmd_vel| DIFF
 ```
 
-The transform chain is `map → odom → base_footprint → base_link → {chassis, wheels}`. Ownership is split deliberately: the Gazebo `diff_drive` plugin publishes `/odom` but has `publish_odom_tf` set to **false**, so the EKF is the sole publisher of `odom → base_footprint`, and AMCL is the sole publisher of `map → odom`. This avoids the duplicate-transform conflict that breaks a naïve `robot_localization` + Nav2 setup.
+The transform chain is `map → odom → base_footprint → base_link → {chassis, wheels}`. 
+
+Ownership is split deliberately:
+- the Gazebo `diff_drive` plugin publishes `/odom` but has `publish_odom_tf` set to **false**.
+- the EKF is the sole publisher of `odom → base_footprint`.
+- AMCL is the sole publisher of `map → odom`.
+
+This avoids the duplicate-transform conflict that breaks a naïve `robot_localization` + Nav2 setup.
 
 | Component | Package | Owns |
 |---|---|---|
