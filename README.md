@@ -30,8 +30,6 @@ What separates this repository from a stock Nav2 bringup is the third layer. Thr
 
 ## System architecture
 
-Nine ROS 2 nodes, brought up in a fixed order by `launch/sim_navigation.launch.py`.
-
 ```mermaid
 flowchart LR
     subgraph SIM["Gazebo (room2.world)"]
