@@ -97,9 +97,9 @@ Output is remapped to `/odom/filtered`.
 
 ### Mapping — `config/mapper_params_online_async.yaml`
 
-![SLAM mapping run in Gazebo and RViz2](assets/gifs/slam.gif)
-
 Asynchronous pose-graph SLAM with a Ceres back end.
+
+![SLAM mapping run in Gazebo and RViz2](assets/gifs/slam.gif)
 
 ### Navigation — `config/nav2_config.yaml`
 
