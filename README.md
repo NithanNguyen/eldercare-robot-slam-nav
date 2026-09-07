@@ -55,11 +55,11 @@ flowchart LR
 The transform chain is `map → odom → base_footprint → base_link → {chassis, wheels}`. 
 
 Ownership is split deliberately:
-- the Gazebo `diff_drive` plugin publishes `/odom` but has `publish_odom_tf` set to **false**.
-- the EKF is the sole publisher of `odom → base_footprint`.
+- The Gazebo `diff_drive` plugin publishes `/odom` but has `publish_odom_tf` set to **false**.
+- The EKF is the sole publisher of `odom → base_footprint`.
 - AMCL is the sole publisher of `map → odom`.
 
-This avoids the duplicate-transform conflict that breaks a naïve `robot_localization` + Nav2 setup.
+=> \Rightarrow This avoids the duplicate-transform conflict that breaks a naïve `robot_localization` + Nav2 setup.
 
 | Component | Package | Owns |
 |---|---|---|
@@ -101,7 +101,7 @@ Keyframe gating at 0.5 m / 0.5 rad is the parameter doing the most work here: it
 
 ### Localization — `config/ekf.yaml` and `config/nav2_config.yaml`
 
-The EKF fuses only the states each sensor actually observes well:
+- The EKF fuses only the states each sensor actually observes well:
 
 | Source | Topic | States fused |
 |---|---|---|
@@ -110,7 +110,7 @@ The EKF fuses only the states each sensor actually observes well:
 
 Output is remapped to `/odom/filtered`.
 
-Global localization uses AMCL with a `likelihood_field` sensor model.
+- Global localization uses AMCL with a `likelihood_field` sensor model.
 
 ### Navigation — `config/nav2_config.yaml`
 
