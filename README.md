@@ -269,11 +269,12 @@ Each script writes a timestamped CSV and PNG to the working directory on `Ctrl-C
 The Nav2 parameter set was derived from the TurtleBot3 simulation baseline; the retained `params/nav2_params_base.yaml` preserves that lineage, including its reference to [`turtlebot3_simulations` issue #75](https://github.com/ROBOTIS-GIT/turtlebot3_simulations/issues/75).
 
 ---
+## Author
+
+`Nguyen Pham Thien An` — `npthienan257@gmail.com`
 
 ## License
 
 Licensed under the Apache License 2.0, as declared in `package.xml`. See [`LICENSE`](LICENSE).
 
-## Author
 
-`Nguyen Pham Thien An` — `npthienan257@gmail.com`
